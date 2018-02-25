@@ -1,0 +1,238 @@
+<html>
+<head>
+<title>Game</title>
+
+<style>
+
+#container{
+  width:800px;
+  height:600px;
+  margin-left:250px;
+  margin-top:50px;
+
+}
+
+</style>
+
+<script>
+
+var canvas;
+var canvascontext;
+var ballX=10;
+var ballY=40;
+var ballSpeedX=5;
+var ballSpeedY=5;
+
+var paddle1Y=250;
+var paddle_height=100;
+var paddle2Y=250;
+var paddle_thickness=10;
+
+var player1score=0;
+var player2score=0;
+
+const winning_score=3;
+
+var winning_window=false;
+
+
+
+function calculateMousePos(evt)
+{
+  var rect= canvas.getBoundingClientRect();
+  var root= document.documentElement;
+  var mouseX= evt.clientX - rect.left - root.scrollLeft;
+  var mouseY= evt.clientY - rect.top -  root.scrollTop;
+  return{
+     x:mouseX,
+	 y:mouseY
+  };
+  
+}
+
+function handlemouseclick(evt){
+   
+    if(winning_window){
+	      player1score=0;
+		  player2score=0;
+		  winning_window=false;
+		  ballX=10;
+		  ballY=40;
+	}
+   
+}
+
+
+window.onload=function()                          //this will run after window gets loaded
+{
+   canvas=document.getElementById("gamecanvas");
+   canvascontext=canvas.getContext("2d");
+   var framesPerSecond=30;             
+   setInterval(function(){                                       //inline function
+      moveEverything();
+	  drawEverything();
+   },1000/framesPerSecond);             //means function get called after every 1000/30 milliseconds   
+  
+     canvas.addEventListener('mousedown',handlemouseclick);
+  
+  
+    canvas.addEventListener('mousemove',
+	 function(evt){
+	    var mousePos= calculateMousePos(evt);
+		paddle1Y=mousePos.y - (paddle_height/2); 
+	 });
+   
+   
+}
+
+function ballReset(){
+
+   if(player1score >= winning_score || player2score >= winning_score)
+   {
+      winning_window=true;
+	  return;
+   }
+
+   ballSpeedX=-ballSpeedX;
+   ballX=canvas.width/2;
+   ballY=canvas.height/2;
+}
+
+
+function computerMove(){
+
+         paddle2YCenter = paddle2Y + (paddle_height/2);
+		 
+		 if(paddle2YCenter < ballY-35)
+		 {
+		   paddle2Y+=6;
+		 }
+		 
+		 else if(paddle2YCenter > ballY+35){
+		    paddle2Y-=6;
+		 }
+
+}
+
+
+function moveEverything(){
+
+   computerMove();
+   
+   ballX=ballX +ballSpeedX;
+   ballY=ballY + ballSpeedY;
+   
+   if(ballX > canvas.width)
+   {
+      if(ballY > paddle2Y && ballY < (paddle2Y + paddle_height)) 
+       {
+	      ballSpeedX=-ballSpeedX;
+		  
+		  var deltaY= ballY - (paddle2Y + (paddle_height/2));
+		  ballSpeedY= deltaY * 0.35;
+		  
+	   }
+	  else{
+	      player1score++;
+	      ballReset();	 
+	  }
+   }
+   
+   if(ballX==0)
+   {
+      if(ballY > paddle1Y && ballY < (paddle1Y + paddle_height)) 
+       {
+	      ballSpeedX=-ballSpeedX;
+		  var deltaY= ballY - (paddle1Y + (paddle_height/2));
+		  ballSpeedY= deltaY * 0.35;
+	   }
+	  else{
+		   player2score++;
+		   ballReset();
+	  }
+   }
+   
+   if(ballY > canvas.height)
+   {
+      ballSpeedY=-ballSpeedY;
+   }
+   
+   if(ballY < 0)
+   {
+      ballSpeedY=-ballSpeedY;
+   }
+   
+      
+}
+
+function drawNet(){
+   
+   for(var i=0;i< canvas.height;i+=40)
+   {
+     canvascontext.fillStyle='white';
+     canvascontext.fillRect(canvas.width/2-1,i,2,20);
+   }  
+}
+
+function drawEverything(){
+
+ canvascontext.fillStyle='black';
+ canvascontext.fillRect(0,0,canvas.width,canvas.height);
+ canvascontext.font="20px Arial";
+ 
+   if(winning_window)
+   {
+      canvascontext.fillStyle='green';
+	  if(player1score >= winning_score )
+	  {
+	    canvascontext.fillText("You won the game",280,200);
+	  }
+	  else if(player2score >= winning_score)
+	  {
+	     canvascontext.fillText("Computer won the game",280,200);
+	  }
+      canvascontext.fillText("click to play again",300,500);
+	  return;
+   }
+   
+     drawNet();
+ 
+ //left paddle
+  canvascontext.fillStyle='white';
+ canvascontext.fillRect(0,paddle1Y,paddle_thickness,paddle_height);                 //first two give starting point and last two are width and height
+ 
+  //right paddle
+  
+  canvascontext.fillStyle='white';
+ canvascontext.fillRect(canvas.width-10,paddle2Y,paddle_thickness,paddle_height);   
+ 
+    //to draw a ball
+	//we can make arc in js 
+	// in arc; parameters are center(x,y) coordinate ,radius,starting angle in radians,ending angle in radians.
+	//angle is formed from right point and going clockwise and circle is filled after discarding this angle.
+	//it behaves opposite if value is false in last arguments of arc.
+ canvascontext.fillStyle='red';
+ canvascontext.beginPath();
+ canvascontext.arc(ballX,ballY,10,0,Math.PI*2,true);        
+ canvascontext.fill();
+ 
+ canvascontext.fillStyle='green';
+ canvascontext.fillText(player1score,100,100);
+ canvascontext.fillText(player2score,canvas.width-100,100);
+  
+}
+
+
+</script>
+
+
+</head>
+<body>
+<div id="container">
+<canvas id="gamecanvas" width="800" height="600"></canvas>
+</div>
+
+
+</body>
+
+</html>
